@@ -111,10 +111,10 @@ impl Client {
         let current_state = app::get_current_state();
 
         if current_state.mouse_down {
-            // self.models[0].rotation.x += current_state.delta_mouse_x;
-            // self.models[0].rotation.y += current_state.delta_mouse_y;
-            self.models[0].position.x = (2.0 * current_state.mouse_x - current_state.canvas_width)  / current_state.canvas_width;
-            self.models[0].position.y = (2.0 * current_state.mouse_y - current_state.canvas_height) / current_state.canvas_height;
+            self.models[0].rotation.y -= (current_state.delta_mouse_x / current_state.canvas_width)  * 2.0 * std::f32::consts::PI;
+            self.models[0].rotation.x += (current_state.delta_mouse_y / current_state.canvas_height) * 2.0 * std::f32::consts::PI;
+            // self.models[0].position.x = (2.0 * current_state.mouse_x - current_state.canvas_width)  / current_state.canvas_width;
+            // self.models[0].position.y = (2.0 * current_state.mouse_y - current_state.canvas_height) / current_state.canvas_height;
         }
 
         let forward  = current_state.key_pressed[KEY_FORWARD_INDEX]   as i32;
@@ -135,11 +135,11 @@ impl Client {
     }
 
     pub fn render(&self) {
-        let current_state = app::get_current_state();
-        log(format!("Keys: {:?} | Mouse: {}", current_state.key_pressed, current_state.mouse_down).as_str());
+        // let current_state = app::get_current_state();
+        // log(format!("Keys: {:?} | Mouse: {}", current_state.key_pressed, current_state.mouse_down).as_str());
 
-        self.gl.clear_color(0.5, 0.0, 0.5, 0.0);
-        self.gl.clear(GL::COLOR_BUFFER_BIT);
+        self.gl.clear_color(0.1, 0.1, 0.1, 0.1);
+        self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
         self.default.render(&self.gl, &self.models, &self.camera).unwrap();
 

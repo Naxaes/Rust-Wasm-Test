@@ -67,13 +67,13 @@ impl Default {
 
         gl.uniform_matrix4fv_with_f32_array(Some(&proj_location), false, &value_ptr(&glm::perspective(16.0 / 9.0, 3.14 / 2.0, 1.0, 1000.0)));
 
-        log(format!("Camera: {}, {}, {}", camera.position.x, camera.position.y, camera.position.z).as_str());
-
         for model in models.iter() {
             let transform = glm::translation(&model.position);
-            // let transform = glm::rotate_x(&transform, model.rotation.x);
-            // let transform = glm::rotate_y(&transform, model.rotation.y);
-            // let transform = glm::rotate_z(&transform, model.rotation.z);
+            let transform = glm::rotate_x(&transform, model.rotation.x);
+            let transform = glm::rotate_y(&transform, model.rotation.y);
+            let transform = glm::rotate_z(&transform, model.rotation.z);
+
+            log(format!("{}, {}, {}", model.rotation.x, model.rotation.y, model.rotation.z).as_str());
 
             gl.uniform_matrix4fv_with_f32_array(Some(&model_location), false, &value_ptr(&transform));
 
