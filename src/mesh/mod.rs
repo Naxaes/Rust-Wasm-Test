@@ -80,12 +80,22 @@ pub const VERTICES_TEXTURE_AND_NORMAL_3D_CUBE: [f32; 288] = [
     -0.5,  0.5, -0.5,       0.0,  1.0,        0.0,  1.0,  0.0
 ];
 
+enum Dimension {
+    Dimension2D,
+    Dimension3D,
+}
+
+
+pub struct Format {
+    indexed: bool,
+    dimension: Dimension,
+}
 
 
 pub struct Mesh {
-    id: WebGlVertexArrayObject,
-    count: i32,
-    is_indexed: bool,
+    pub id: WebGlVertexArrayObject,
+    pub count: i32,
+    pub is_indexed: bool,
 }
 
 impl Mesh {
@@ -103,8 +113,9 @@ impl Mesh {
         }
     }
 
-    pub fn from_f32_array(gl: &GL, vertices: &[f32]) -> Result<Self, String> {
-        assert_eq!(vertices.len() % Self::DIMENSIONS, 0);
+    pub fn from_f32_array_3d(gl: &GL, vertices: &[f32], has_texture_coordinates: bool, has_normals: bool) -> Result<Self, String> {
+        assert_eq!(vertices.len() % 3, 0);
+        assert_ne!(has_texture_coordinates as i32 - has_normals as i32, -1);
 
         let vertex_memory = wasm_bindgen::memory()
             .dyn_into::<WebAssembly::Memory>()
@@ -125,22 +136,29 @@ impl Mesh {
         gl.bind_buffer(GL::ARRAY_BUFFER, Some(&vbo));
         gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vertices_array, GL::STATIC_DRAW);
 
+        let size_of_float = 4;
+        let stride = (3 + 2 * has_texture_coordinates as i32 + 3 * has_normals as i32) * size_of_float;
+
         // Tell OpenGL the data's format.
         gl.enable_vertex_attrib_array(0);
-        gl.enable_vertex_attrib_array(1);
-        gl.enable_vertex_attrib_array(2);
-
-        let stride = (3 + 2 + 3) * (4 /* sizeof(float) */);
         gl.vertex_attrib_pointer_with_i32(0, 3 as i32, GL::FLOAT, false, stride, 0);
-        gl.vertex_attrib_pointer_with_i32(1, 2 as i32, GL::FLOAT, false, stride, 3 * (4 /* sizeof(float) */));
-        gl.vertex_attrib_pointer_with_i32(2, 3 as i32, GL::FLOAT, false, stride, (3 + 2) * (4 /* sizeof(float) */));
+        let mut component_count = 3;
 
-        Ok(Self { id: vao, count: (vertices.len() / (3 + 2 + 3)) as i32, is_indexed: false})
+        if has_texture_coordinates {
+            gl.enable_vertex_attrib_array(1);
+            gl.vertex_attrib_pointer_with_i32(1, 2 as i32, GL::FLOAT, false, stride, 3 * size_of_float);
+            component_count += 2;
+            if has_normals {
+                gl.enable_vertex_attrib_array(2);
+                gl.vertex_attrib_pointer_with_i32(2, 3 as i32, GL::FLOAT, false, stride, (3 + 2) * size_of_float);
+                component_count += 3;
+            }
+        }
+
+        Ok(Self { id: vao, count: (vertices.len() / component_count) as i32, is_indexed: false})
     }
 
-    pub fn from_f32_array_with_indices(gl: &GL, vertices: &[f32], indices: &[u16]) -> Result<Self, String> {
-        assert_eq!(indices.len() % Self::DIMENSIONS, 0);
-
+    pub fn from_f32_array_with_indices_3d(gl: &GL, vertices: &[f32], indices: &[u16]) -> Result<Self, String> {
         let vertex_memory = wasm_bindgen::memory()
             .dyn_into::<WebAssembly::Memory>()
             .unwrap()
@@ -180,7 +198,7 @@ impl Mesh {
         // Tell OpenGL the data's format.
         gl.enable_vertex_attrib_array(0);
 
-        gl.vertex_attrib_pointer_with_i32(0, Self::DIMENSIONS as i32, GL::FLOAT, false, 0, 0);
+        gl.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
 
         Ok(Self { id: vao, count: indices.len() as i32, is_indexed: true})
     }

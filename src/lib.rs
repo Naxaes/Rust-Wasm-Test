@@ -45,6 +45,7 @@ pub struct Client {
     gl: GL,
     canvas: web_sys::HtmlCanvasElement,
     default: program::Default,
+    grid: program::Grid,
     models: [Model; 1],
     time: f32,
     camera: Camera,
@@ -60,6 +61,7 @@ impl Client {
         console_error_panic_hook::set_once();
         let (gl, canvas) = gl_setup::initialize_webgl_context().unwrap();
         let default = program::Default::new(&gl).unwrap();
+        let grid = program::Grid::new(&gl).unwrap();
 
         attach_mouse_down_callback(&canvas).unwrap();
         attach_mouse_up_callback(&canvas).unwrap();
@@ -75,6 +77,7 @@ impl Client {
             gl,
             canvas,
             default,
+            grid,
             models,
             time,
             camera,
@@ -135,13 +138,14 @@ impl Client {
     }
 
     pub fn render(&self) {
-        // let current_state = app::get_current_state();
+        let current_state = app::get_current_state();
         // log(format!("Keys: {:?} | Mouse: {}", current_state.key_pressed, current_state.mouse_down).as_str());
 
         self.gl.clear_color(0.1, 0.1, 0.1, 0.1);
         self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
         self.default.render(&self.gl, &self.models, &self.camera).unwrap();
+        self.grid.render(&self.gl, &self.camera).unwrap();
 
         let error = self.gl.get_error();
         if error != GL::NO_ERROR {
