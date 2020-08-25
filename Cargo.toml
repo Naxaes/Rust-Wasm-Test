@@ -12,6 +12,7 @@ console_error_panic_hook = "0.1.6"
 js-sys = "0.3.44"
 lazy_static = "1.4.0"
 nalgebra = "0.21.1"
+nalgebra-glm = "0.7.0"
 serde = { version = "1.0", features = ["derive"] }
 wasm-bindgen = {version = "0.2.67", features = ['serde-serialize'] }
 metric = "0.1.2"
@@ -22,9 +23,11 @@ features = [
     'CssStyleDeclaration',
     'Document',
     'Element',
+    'EventListener',
     'EventTarget',
     'HtmlCanvasElement',
     'HtmlElement',
+    'KeyboardEvent',
     'MouseEvent',
     'WebGl2RenderingContext',
     'WebGlBuffer',

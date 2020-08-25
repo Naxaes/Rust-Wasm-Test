@@ -1,8 +1,6 @@
-
-type Unit = f32;
-
 pub mod matrix {
 
+    #[repr(C)]
     struct Matrix4x4 {
         pub m00: f32, pub m01: f32, pub m02: f32, pub m03: f32,
         pub m10: f32, pub m11: f32, pub m12: f32, pub m13: f32,
@@ -19,6 +17,8 @@ pub mod matrix {
                 m30: 0.0, m31: 0.0, m32: 0.0, m33: 1.0,
             }
         }
+
+
     }
 
 
@@ -50,17 +50,6 @@ pub mod matrix {
 
         matrix
     }
-
-    // pub fn perspective(aspect_ratio: f32, fov_y: f32, far_plane: f32, near_plane: f32) -> Mat4x4 {
-    //     let mut m = [0f32; 16];
-    //
-    //     m[0]  = (2*n) / (r - l);  m[4]  = 0.;               m[8]  =  (r + l) / (r - l);  m[12] = 0.;
-    //     m[1]  = 0.;               m[5]  = (2*n) / (t - b);  m[9]  =  (t + b) / (t - b);  m[13] = 0.;
-    //     m[2]  = 0.;               m[6]  = 0.;               m[10] = -(f + n) / (f - n);  m[14] = -(2*f*n) / (f - n);
-    //     m[3]  = 0.;               m[7]  = 0.;               m[11] = -1.0;                m[15] = 0.;
-    //
-    //     m
-    // }
 
     pub fn multiply_mat4x4(a: Mat4x4, b: Mat4x4) -> Mat4x4 {
         let mut matrix = [0f32; 16];

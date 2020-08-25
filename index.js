@@ -3,7 +3,7 @@ const rust = import('./pkg')
 rust.then(m => {
     const FPS = 10.0;
     const UPDATE_TIME_MS = 1000.0 / FPS;
-    let lastRenderTime = -1;
+    let lastRenderTime = Date.now();
 
     const client = new m.Client();
 
