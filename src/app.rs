@@ -14,6 +14,8 @@ const KEY_LEFT      : &str = "KeyA";
 const KEY_RIGHT     : &str = "KeyD";
 const KEY_UP        : &str = "Space";
 const KEY_DOWN      : &str = "ControlLeft";
+const KEY_ROTATE_LEFT  : &str = "KeyQ";
+const KEY_ROTATE_RIGHT : &str = "KeyE";
 
 pub const KEY_FORWARD_INDEX   : usize = 0;
 pub const KEY_LEFT_INDEX      : usize = 1;
@@ -21,6 +23,8 @@ pub const KEY_BACKWARDS_INDEX : usize = 2;
 pub const KEY_RIGHT_INDEX     : usize = 3;
 pub const KEY_UP_INDEX        : usize = 4;
 pub const KEY_DOWN_INDEX      : usize = 5;
+pub const KEY_ROTATE_LEFT_INDEX  : usize = 6;
+pub const KEY_ROTATE_RIGHT_INDEX : usize = 7;
 
 
 lazy_static! {
@@ -41,7 +45,7 @@ pub struct AppState {
     pub delta_mouse_y: f32,
     pub time: f32,
 
-    pub key_pressed: [bool; 6]
+    pub key_pressed: [bool; 8]
 }
 
 impl AppState {
@@ -55,7 +59,7 @@ impl AppState {
             delta_mouse_x: 0.,
             delta_mouse_y: 0.,
             time: 0.,
-            key_pressed: [false, false, false, false, false, false],
+            key_pressed: [false, false, false, false, false, false, false, false],
         }
     }
 }
@@ -110,6 +114,10 @@ pub fn update_key_press(code: &String, down: bool) {
             KEY_UP_INDEX
         } else if *code == KEY_DOWN {
             KEY_DOWN_INDEX
+        } else if *code == KEY_ROTATE_LEFT {
+            KEY_ROTATE_LEFT_INDEX
+        } else if *code == KEY_ROTATE_RIGHT {
+            KEY_ROTATE_RIGHT_INDEX
         } else {
             return;
         };

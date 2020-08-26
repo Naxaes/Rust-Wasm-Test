@@ -120,17 +120,27 @@ impl Client {
             // self.models[0].position.y = (2.0 * current_state.mouse_y - current_state.canvas_height) / current_state.canvas_height;
         }
 
-        let forward  = current_state.key_pressed[KEY_FORWARD_INDEX]   as i32;
-        let backward = current_state.key_pressed[KEY_BACKWARDS_INDEX] as i32;
-        let left     = current_state.key_pressed[KEY_LEFT_INDEX]      as i32;
-        let right    = current_state.key_pressed[KEY_RIGHT_INDEX]     as i32;
-        let up       = current_state.key_pressed[KEY_UP_INDEX]        as i32;
-        let down     = current_state.key_pressed[KEY_DOWN_INDEX]      as i32;
+        let forward   = current_state.key_pressed[KEY_FORWARD_INDEX]      as i32;
+        let backward  = current_state.key_pressed[KEY_BACKWARDS_INDEX]    as i32;
+        let left      = current_state.key_pressed[KEY_LEFT_INDEX]         as i32;
+        let right     = current_state.key_pressed[KEY_RIGHT_INDEX]        as i32;
+        let up        = current_state.key_pressed[KEY_UP_INDEX]           as i32;
+        let down      = current_state.key_pressed[KEY_DOWN_INDEX]         as i32;
+        let rot_left  = current_state.key_pressed[KEY_ROTATE_LEFT_INDEX]  as i32;
+        let rot_right = current_state.key_pressed[KEY_ROTATE_RIGHT_INDEX] as i32;
 
         // Should take camera direction into account, i.e. movement should be local to camera.
-        self.camera.position.x += (right   - left)     as f32 * dt / 1000.0;
-        self.camera.position.y += (down    - up)       as f32 * dt / 1000.0;
-        self.camera.position.z += (forward - backward) as f32 * dt / 1000.0;
+        let delta_x = (right   - left)     as f32 * dt / 1000.0;
+        let delta_y = (up      - down)     as f32 * dt / 1000.0;
+        let delta_z = (forward - backward) as f32 * dt / 1000.0;
+
+        self.camera.move_right(delta_x);
+        self.camera.move_up(delta_y);
+        self.camera.move_forward(delta_z);
+
+        let rotation = (rot_left - rot_right) as f32 * dt / 1000.0;
+        log(format!("{}", rotation).as_str());
+        self.camera.rotate(rotation, 0.0, 0.0);
 
         self.time += dt;
 
