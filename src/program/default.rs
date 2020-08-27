@@ -62,8 +62,7 @@ impl Default {
             get_uniform_location(&self.program, "projection").
             ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'projection'.")?;
 
-        let camera_position = -&camera.position;
-        gl.uniform_matrix4fv_with_f32_array(Some(&view_location), false, &value_ptr(&glm::translation(&camera_position)));
+        gl.uniform_matrix4fv_with_f32_array(Some(&view_location), false, &value_ptr(&camera.view_matrix()));
 
         gl.uniform_matrix4fv_with_f32_array(Some(&proj_location), false, &value_ptr(&glm::perspective(16.0 / 9.0, 3.14 / 2.0, 1.0, 1000.0)));
 
@@ -72,8 +71,6 @@ impl Default {
             let transform = glm::rotate_x(&transform, model.rotation.x);
             let transform = glm::rotate_y(&transform, model.rotation.y);
             let transform = glm::rotate_z(&transform, model.rotation.z);
-
-            log(format!("{}, {}, {}", model.rotation.x, model.rotation.y, model.rotation.z).as_str());
 
             gl.uniform_matrix4fv_with_f32_array(Some(&model_location), false, &value_ptr(&transform));
 

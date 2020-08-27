@@ -100,7 +100,7 @@ pub fn update_canvas_and_time(time: f32, canvas_height: f32, canvas_width: f32) 
 }
 
 pub fn update_key_press(code: &String, down: bool) {
-    log(format!("Code: {}, down: {}", &code, down).as_str());
+    // log(format!("Code: {}, down: {}", &code, down).as_str());
     let index =
         if *code == KEY_FORWARD {
             KEY_FORWARD_INDEX

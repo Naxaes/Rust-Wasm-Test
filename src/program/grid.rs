@@ -71,8 +71,7 @@ impl Grid {
             get_uniform_location(&self.program, "projection").
             ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'projection'.")?;
 
-        let camera_position = -&camera.position;
-        gl.uniform_matrix4fv_with_f32_array(Some(&view_location), false, &value_ptr(&glm::translation(&camera_position)));
+        gl.uniform_matrix4fv_with_f32_array(Some(&view_location), false, &value_ptr(&camera.view_matrix()));
 
         gl.uniform_matrix4fv_with_f32_array(Some(&proj_location), false, &value_ptr(&glm::perspective(16.0 / 9.0, 3.14 / 2.0, 1.0, 1000.0)));
 

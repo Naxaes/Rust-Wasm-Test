@@ -139,8 +139,13 @@ impl Client {
         self.camera.move_forward(delta_z);
 
         let rotation = (rot_left - rot_right) as f32 * dt / 1000.0;
-        log(format!("{}", rotation).as_str());
         self.camera.rotate(rotation, 0.0, 0.0);
+
+        // log(format!("Input: {}, {}, {} | {}", &delta_x, &delta_y, &delta_z, &rotation).as_str());
+        // log(format!("Cam pos:     {}, {}, {}", &self.camera.position.x, &self.camera.position.y, &self.camera.position.z).as_str());
+        // log(format!("Cam right:   {}, {}, {}", &self.camera.direction.right.x, &self.camera.direction.right.y, &self.camera.direction.right.z).as_str());
+        // log(format!("Cam up:      {}, {}, {}", &self.camera.direction.up.x, &self.camera.direction.up.y, &self.camera.direction.up.z).as_str());
+        // log(format!("Cam forward: {}, {}, {}", &self.camera.direction.forward.x, &self.camera.direction.forward.y, &self.camera.direction.forward.z).as_str());
 
         self.time += dt;
 

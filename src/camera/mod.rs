@@ -1,4 +1,4 @@
-use nalgebra::{Vector3, partial_clamp};
+use nalgebra::{Vector3, Matrix4};
 use crate::log;
 use wasm_bindgen::__rt::core::f32::consts::PI;
 use std::cmp::{max, min};
@@ -52,12 +52,12 @@ pub struct Axis {
     //   up      = normalize(up)
     //   forward = normalize(forward)
     //   right * forwards = right * up = up * forward = 0  (scalar product)
-    right:   Vector3<Millimeters>,
-    up:      Vector3<Millimeters>,
-    forward: Vector3<Millimeters>,
+    pub right:   Vector3<Millimeters>,
+    pub up:      Vector3<Millimeters>,
+    pub forward: Vector3<Millimeters>,
 
-    yaw: Radians,
-    pitch: Radians,
+    pub yaw: Radians,
+    pub pitch: Radians,
 }
 
 impl Axis {
@@ -71,7 +71,7 @@ impl Axis {
             up:      glm::make_vec3(&Axis::WORLD_AXIS_UP),
             forward: glm::make_vec3(&Axis::WORLD_AXIS_FORWARD),
 
-            yaw: PI / 2.0,
+            yaw: 0.0,
             pitch: PI / 2.0,
         }
     }
@@ -90,15 +90,17 @@ impl Axis {
         let world_axis_up = glm::make_vec3(&Axis::WORLD_AXIS_UP);
 
         self.yaw += yaw;  // TODO(ted): fmod 2PI
-        self.pitch = Self::clamp(self.pitch + pitch, -PI + 0.001, PI - 0.001);
+        self.pitch = Self::clamp(self.pitch + pitch, 0.001, PI - 0.001);
 
         // The OpenGL-coordinate system is not like the traditional mathematical system, it's rotated.
-        self.forward.x = self.yaw.cos() * self.pitch.sin();
+        self.forward.z = self.yaw.cos() * self.pitch.sin();
+        self.forward.x = self.yaw.sin() * self.pitch.sin();
         self.forward.y = self.pitch.cos();
-        self.forward.z = self.yaw.sin() * self.pitch.sin();
 
-        self.right = glm::cross(&world_axis_up, &self.forward);
-        self.up    = glm::cross(&self.forward, &self.right);
+        // TODO(ted): THIS DOESN'T MAKE SENSE!! Why do we cross with the backwards vector in a
+        //   right handed coordinate system?
+        self.right = glm::cross(&world_axis_up, &-&self.forward);
+        self.up    = glm::cross(&-&self.forward, &self.right);
 
         self.forward.normalize_mut();
         self.right.normalize_mut();
@@ -112,15 +114,17 @@ pub struct FPSCamera {
     pub position: Vector3<Millimeters>,
     pub is_orthographic: bool,
     pub pinhole_camera: PinholeCamera,
+    pub target: Option<Vector3<Millimeters>>,
 }
 
 impl FPSCamera {
     pub fn new() -> Self {
         Self {
-            position: Vector3::new(0.0, 0.0, 3.0),
+            position: Vector3::new(0.0, 0.0, -3.0),
             direction: Axis::new(),
             is_orthographic: false,
             pinhole_camera: PinholeCamera::new(),
+            target: None,
         }
     }
 
@@ -137,6 +141,13 @@ impl FPSCamera {
 
     pub fn rotate(&mut self, yaw: f32, pitch: f32, roll: f32) {
         self.direction.rotate(yaw, pitch, roll);
+    }
+
+    pub fn view_matrix(&self) -> Matrix4<Millimeters> {
+        match &self.target {
+            Some(target) => glm::look_at(&self.position, &target, &self.direction.up),
+            None => glm::look_at(&self.position,  &(&self.position + &self.direction.forward), &self.direction.up)
+        }
     }
 }
 
