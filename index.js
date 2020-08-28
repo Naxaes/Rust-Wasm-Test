@@ -1,8 +1,12 @@
 const rust = import('./pkg')
 
+function get_update_time() {
+    const FPS = document.getElementById("fps").value;
+    return 1000.0 / FPS;
+}
+
+
 rust.then(m => {
-    const FPS = 10.0;
-    const UPDATE_TIME_MS = 1000.0 / FPS;
     let lastRenderTime = Date.now();
 
     const client = new m.Client();
@@ -10,8 +14,9 @@ rust.then(m => {
     function render() {
         window.requestAnimationFrame(render)
         const currentTime = Date.now();
+        const updateTime = get_update_time();
 
-        if (currentTime >= lastRenderTime + UPDATE_TIME_MS) {
+        if (currentTime >= lastRenderTime + updateTime) {
             let elapsedTime = currentTime - lastRenderTime;
             lastRenderTime = currentTime;
             client.update(elapsedTime, window.innerHeight, window.innerWidth);

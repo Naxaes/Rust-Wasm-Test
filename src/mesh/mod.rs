@@ -113,6 +113,14 @@ impl Mesh {
         }
     }
 
+    pub fn draw_with(&self, gl: &GL, mode: u32) {
+        if self.is_indexed {
+            gl.draw_elements_with_i32(mode, self.count, GL::UNSIGNED_SHORT, 0);
+        } else {
+            gl.draw_arrays(mode, 0, self.count);
+        }
+    }
+
     pub fn from_f32_array_3d(gl: &GL, vertices: &[f32], has_texture_coordinates: bool, has_normals: bool) -> Result<Self, String> {
         assert_eq!(vertices.len() % 3, 0);
         assert_ne!(has_texture_coordinates as i32 - has_normals as i32, -1);

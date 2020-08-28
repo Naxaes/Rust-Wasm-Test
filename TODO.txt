@@ -1,0 +1,3 @@
+
+
+* Key release is not registered on the canvas if the mouse is moved to another element when released.

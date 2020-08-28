@@ -29,9 +29,9 @@ pub struct Default {
     program: WebGlProgram,
 
     // Uniforms.
-    // color: WebGlUniformLocation,
-    // opacity: WebGlUniformLocation,
-    // transform: WebGlUniformLocation,
+    model: WebGlUniformLocation,
+    view:  WebGlUniformLocation,
+    projection: WebGlUniformLocation,
 }
 
 impl Default {
@@ -42,29 +42,29 @@ impl Default {
             &fragment::default::new(gl)?,
         )?;
 
+        let model = gl.
+            get_uniform_location(&program, "model").
+            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'model'.")?;
+        let view = gl.
+            get_uniform_location(&program, "view").
+            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'view'.")?;
+        let projection = gl.
+            get_uniform_location(&program, "projection").
+            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'projection'.")?;
+
         Ok(Self {
-            // color: gl.get_uniform_location(&program, "color").unwrap_or("Couldn't get uniform 'color'")?,
-            // opacity: gl.get_uniform_location(&program, "opacity").unwrap_or("Couldn't get uniform 'opacity'")?,
-            program: program,
+            program,
+            model,
+            view,
+            projection
         })
     }
 
     pub fn render(&self, gl: &GL, models: &[Model], camera: &Camera) -> Result<(), String> {
         gl.use_program(Some(&self.program));
 
-        let model_location = gl.
-            get_uniform_location(&self.program, "model").
-            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'model'.")?;
-        let view_location = gl.
-            get_uniform_location(&self.program, "view").
-            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'view'.")?;
-        let proj_location = gl.
-            get_uniform_location(&self.program, "projection").
-            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'projection'.")?;
-
-        gl.uniform_matrix4fv_with_f32_array(Some(&view_location), false, &value_ptr(&camera.view_matrix()));
-
-        gl.uniform_matrix4fv_with_f32_array(Some(&proj_location), false, &value_ptr(&glm::perspective(16.0 / 9.0, 3.14 / 2.0, 1.0, 1000.0)));
+        gl.uniform_matrix4fv_with_f32_array(Some(&self.view), false, &value_ptr(&camera.view_matrix()));
+        gl.uniform_matrix4fv_with_f32_array(Some(&self.projection), false, &value_ptr(&camera.projection_matrix()));
 
         for model in models.iter() {
             let transform = glm::translation(&model.position);
@@ -72,7 +72,7 @@ impl Default {
             let transform = glm::rotate_y(&transform, model.rotation.y);
             let transform = glm::rotate_z(&transform, model.rotation.z);
 
-            gl.uniform_matrix4fv_with_f32_array(Some(&model_location), false, &value_ptr(&transform));
+            gl.uniform_matrix4fv_with_f32_array(Some(&self.model), false, &value_ptr(&transform));
 
             model.mesh.enable(&gl);
             model.mesh.draw(&gl);

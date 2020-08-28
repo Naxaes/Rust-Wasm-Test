@@ -3,8 +3,29 @@
   <head>
       <link rel="icon" href="data:;base64,iVBORwOKGO=" />  <!-- Makes the favicon to nothing to prevent error -->
       <title>Multi-variable Calculus</title>
+
+      <script>
+          function showValue(name, value) {
+              document.getElementById(name).innerHTML = value;
+          }
+      </script>
+
   </head>
   <body style="background: black; margin: 0; overflow: hidden;">
-    <canvas id="canvas" tabindex='1'></canvas>  <!--- https://stackoverflow.com/questions/12886286/addeventlistener-for-keydown-on-canvas --->
+    <canvas id="canvas" tabindex='0' style="position:absolute; top:0px; left:0px;"></canvas>  <!--- https://stackoverflow.com/questions/12886286/addeventlistener-for-keydown-on-canvas --->
+
+    <div id="settings" style="position:relative; color:white; padding-left:20px">
+        <p>Settings:</p>
+        <div>
+            <input type="range" id="fps" name="fps" min="1" max="120" value="60" oninput="showValue(this.id + '-label', 'FPS ' + this.value)">
+            <label id="fps-label" for="fps">FPS 60</label>
+        </div>
+        <!--
+        <div>
+            <input type="range" id="unknown" name="unknown" min="0" max="100" value="90" step="10" oninput="showValue(this.id + '-label', 'FPS ' + this.value)">
+            <label for="unknown">Unknown</label>
+        </div>
+        -->
+    </div>
   </body>
 </html>

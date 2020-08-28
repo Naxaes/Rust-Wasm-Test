@@ -16,11 +16,12 @@ pub struct PinholeCamera {
     pub aperture: Millimeters
 }
 
+// TODO(ted): Make this physically correct.
 impl PinholeCamera {
     pub fn new() -> Self {
         Self {
             focal_length: 8.0,
-            sensor_width: 20.0,
+            sensor_width: 35.5,
             sensor_height: 20.0,
             aperture: 20.0,
         }
@@ -148,6 +149,10 @@ impl FPSCamera {
             Some(target) => glm::look_at(&self.position, &target, &self.direction.up),
             None => glm::look_at(&self.position,  &(&self.position + &self.direction.forward), &self.direction.up)
         }
+    }
+
+    pub fn projection_matrix(&self) -> Matrix4<Millimeters> {
+        glm::perspective(self.pinhole_camera.aspect_ratio(), PI / 3.0, 0.1, 100.0)
     }
 }
 

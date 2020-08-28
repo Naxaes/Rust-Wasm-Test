@@ -16,8 +16,8 @@ pub struct Grid {
     grid: Mesh,
 
     // Uniforms.
-    // view: WebGlUniformLocation,
-    // projection: WebGlUniformLocation,
+    view: WebGlUniformLocation,
+    projection: WebGlUniformLocation,
 }
 
 impl Grid {
@@ -55,28 +55,29 @@ impl Grid {
 
         let grid = Mesh::from_f32_array_with_indices_3d(gl, &vertices, &indices).unwrap();
 
+        let view = gl.
+            get_uniform_location(&program, "view").
+            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'view'.")?;
+        let projection = gl.
+            get_uniform_location(&program, "projection").
+            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'projection'.")?;
+
         Ok(Self {
             program,
-            grid
+            grid,
+            view,
+            projection,
         })
     }
 
     pub fn render(&self, gl: &GL, camera: &Camera) -> Result<(), String> {
         gl.use_program(Some(&self.program));
 
-        let view_location = gl.
-            get_uniform_location(&self.program, "view").
-            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'view'.")?;
-        let proj_location = gl.
-            get_uniform_location(&self.program, "projection").
-            ok_or("[WEBGL2 - UNIFORM ERROR]: Couldn't get uniform 'projection'.")?;
-
-        gl.uniform_matrix4fv_with_f32_array(Some(&view_location), false, &value_ptr(&camera.view_matrix()));
-
-        gl.uniform_matrix4fv_with_f32_array(Some(&proj_location), false, &value_ptr(&glm::perspective(16.0 / 9.0, 3.14 / 2.0, 1.0, 1000.0)));
+        gl.uniform_matrix4fv_with_f32_array(Some(&self.view), false, &value_ptr(&camera.view_matrix()));
+        gl.uniform_matrix4fv_with_f32_array(Some(&self.projection), false, &value_ptr(&camera.projection_matrix()));
 
         self.grid.enable(gl);
-        gl.draw_elements_with_i32(GL::LINES, self.grid.count, GL::UNSIGNED_SHORT, 0);
+        self.grid.draw_with(gl, GL::LINES);
 
         Ok(())
     }

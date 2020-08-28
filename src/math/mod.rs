@@ -2,6 +2,8 @@
 type Unit = f32;
 
 pub mod matrix {
+    use nalgebra::Vector3;
+    use nalgebra::Matrix4;
 
     struct Matrix4x4 {
         pub m00: f32, pub m01: f32, pub m02: f32, pub m03: f32,
@@ -21,7 +23,9 @@ pub mod matrix {
         }
     }
 
-
+    // pub fn make_matrix(position: Vector3<f32>, rotation: Vector3<f32>, scale: Vector3<f32>) -> Matrix4<f32> {
+    //
+    // }
 
     type Mat4x4 = [f32; 16];
 
