@@ -31,6 +31,7 @@ use app::*;
 use model::Model;
 use camera::Camera;
 use nalgebra::{Matrix4, Vector3};
+use js_sys::Math::abs;
 
 
 #[wasm_bindgen]
@@ -89,7 +90,11 @@ impl Client {
         // canvas: web_sys::HtmlElement
         // element: web_sys::Element = *canvas;
 
-        let window = web_sys::window().unwrap();
+        // window = web_sys::window().expect("no global `window` exists");
+        // document = window.document().expect("should have a document on window");
+        // body = document.body().expect("document should have a body");
+
+        let window = web_sys::window().expect("No global window exists!");
         let canvas = &self.canvas;
 
         let height = window.inner_height().unwrap().as_f64().unwrap() as u32;
@@ -114,10 +119,20 @@ impl Client {
         let current_state = app::get_current_state();
 
         if current_state.mouse_down {
-            self.models[0].rotation.y -= (current_state.delta_mouse_x / current_state.canvas_width)  * 2.0 * std::f32::consts::PI;
-            self.models[0].rotation.x += (current_state.delta_mouse_y / current_state.canvas_height) * 2.0 * std::f32::consts::PI;
+            self.models[0].rotation.y -= (current_state.delta_mouse_x / current_state.canvas_width)  * std::f32::consts::PI * (dt/100.0);
+            self.models[0].rotation.x -= (current_state.delta_mouse_y / current_state.canvas_height) * std::f32::consts::PI * (dt/100.0);
             // self.models[0].position.x = (2.0 * current_state.mouse_x - current_state.canvas_width)  / current_state.canvas_width;
             // self.models[0].position.y = (2.0 * current_state.mouse_y - current_state.canvas_height) / current_state.canvas_height;
+        } else {
+            let offset_from_center_x = (current_state.mouse_x - current_state.canvas_width  / 2.0) / current_state.canvas_width;
+            let offset_from_center_y = (current_state.mouse_y - current_state.canvas_height / 2.0) / current_state.canvas_height;
+
+            if offset_from_center_x.abs() >= 0.1 {
+                self.camera.direction.yaw -= offset_from_center_x * (dt/1000.0);
+            }
+            if offset_from_center_y.abs() >= 0.1 {
+                self.camera.direction.pitch -= offset_from_center_y * (dt/1000.0);
+            }
         }
 
         let forward   = current_state.key_pressed[KEY_FORWARD_INDEX]      as i32;
@@ -141,7 +156,8 @@ impl Client {
         let rotation = (rot_left - rot_right) as f32 * dt / 1000.0;
         self.camera.rotate(rotation, 0.0, 0.0);
 
-        // log(format!("Input: {}, {}, {} | {}", &delta_x, &delta_y, &delta_z, &rotation).as_str());
+        // log(format!("Key input: {}, {}, {} | {}", &delta_x, &delta_y, &delta_z, &rotation).as_str());
+        log(format!("Mouse input: {}, {}", &current_state.delta_mouse_x, &current_state.delta_mouse_y).as_str());
         // log(format!("Cam pos:     {}, {}, {}", &self.camera.position.x, &self.camera.position.y, &self.camera.position.z).as_str());
         // log(format!("Cam right:   {}, {}, {}", &self.camera.direction.right.x, &self.camera.direction.right.y, &self.camera.direction.right.z).as_str());
         // log(format!("Cam up:      {}, {}, {}", &self.camera.direction.up.x, &self.camera.direction.up.y, &self.camera.direction.up.z).as_str());
