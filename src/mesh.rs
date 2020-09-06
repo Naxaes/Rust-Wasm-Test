@@ -1,35 +1,39 @@
 use wasm_bindgen::JsCast;
-use js_sys::WebAssembly;
 use web_sys::*;
 use web_sys::WebGl2RenderingContext as GL;
-use crate::log;
+use js_sys::WebAssembly;
+use glm::{Mat4, Vec3, value_ptr};
+
+use crate::materials::{Material, DrawConfig};
+use crate::camera::Camera;
+
 
 
 pub const VERTICES_2D_RECTANGLE: [f32; 12] = [
     -1.,  1., // x, y
     -1., -1., // x, y
-     1.,  1., // x, y
-     1.,  1., // x, y
+    1.,  1., // x, y
+    1.,  1., // x, y
     -1., -1., // x, y
-     1., -1., // x, y
+    1., -1., // x, y
 ];
 pub const VERTICES_2D_TRIANGLE: [f32; 6] = [
     -1., 1., // x, y
     -1., -1., // x, y
-     1., 1., // x, y
+    1., 1., // x, y
 ];
 
 pub const VERTICES_2D_INDEXED_RECTANGLE: [f32; 8] = [
     -1.,  1., // x, y
     -1., -1., // x, y
-     1.,  1., // x, y
-     1., -1., // x, y
+    1.,  1., // x, y
+    1., -1., // x, y
 ];
 pub const VERTICES_3D_INDEXED_RECTANGLE: [f32; 12] = [
     -1.,  1.,  0.,
     -1., -1.,  0.,
-     1.,  1.,  0.,
-     1., -1.,  0.,
+    1.,  1.,  0.,
+    1., -1.,  0.,
 ];
 pub const INDICES_RECTANGLE: [u16; 6] = [
     0, 1, 2,
@@ -37,18 +41,18 @@ pub const INDICES_RECTANGLE: [u16; 6] = [
 ];
 pub const VERTICES_TEXTURE_AND_NORMAL_3D_CUBE: [f32; 288] = [
 //    Positions          Texture coordinates       Normals
-     0.5, -0.5, -0.5,       1.0,  0.0,        0.0,  0.0, -1.0,
+    0.5, -0.5, -0.5,       1.0,  0.0,        0.0,  0.0, -1.0,
     -0.5, -0.5, -0.5,       0.0,  0.0,        0.0,  0.0, -1.0,
-     0.5,  0.5, -0.5,       1.0,  1.0,        0.0,  0.0, -1.0,
+    0.5,  0.5, -0.5,       1.0,  1.0,        0.0,  0.0, -1.0,
     -0.5,  0.5, -0.5,       0.0,  1.0,        0.0,  0.0, -1.0,
-     0.5,  0.5, -0.5,       1.0,  1.0,        0.0,  0.0, -1.0,
+    0.5,  0.5, -0.5,       1.0,  1.0,        0.0,  0.0, -1.0,
     -0.5, -0.5, -0.5,       0.0,  0.0,        0.0,  0.0, -1.0,
 
     -0.5, -0.5,  0.5,       0.0,  0.0,        0.0,  0.0,  1.0,
-     0.5,  0.5,  0.5,       1.0,  1.0,        0.0,  0.0,  1.0,
-     0.5, -0.5,  0.5,       1.0,  0.0,        0.0,  0.0,  1.0,
+    0.5,  0.5,  0.5,       1.0,  1.0,        0.0,  0.0,  1.0,
+    0.5, -0.5,  0.5,       1.0,  0.0,        0.0,  0.0,  1.0,
     -0.5,  0.5,  0.5,       0.0,  1.0,        0.0,  0.0,  1.0,
-     0.5,  0.5,  0.5,       1.0,  1.0,        0.0,  0.0,  1.0,
+    0.5,  0.5,  0.5,       1.0,  1.0,        0.0,  0.0,  1.0,
     -0.5, -0.5,  0.5,       0.0,  0.0,        0.0,  0.0,  1.0,
 
     -0.5,  0.5,  0.5,       1.0,  0.0,        -1.0,  0.0,  0.0,
@@ -58,37 +62,61 @@ pub const VERTICES_TEXTURE_AND_NORMAL_3D_CUBE: [f32; 288] = [
     -0.5, -0.5,  0.5,       0.0,  0.0,        -1.0,  0.0,  0.0,
     -0.5,  0.5,  0.5,       1.0,  0.0,        -1.0,  0.0,  0.0,
 
-     0.5,  0.5,  0.5,       1.0,  0.0,        1.0,  0.0,  0.0,
-     0.5,  0.5, -0.5,       1.0,  1.0,        1.0,  0.0,  0.0,
-     0.5, -0.5, -0.5,       0.0,  1.0,        1.0,  0.0,  0.0,
-     0.5, -0.5, -0.5,       0.0,  1.0,        1.0,  0.0,  0.0,
-     0.5, -0.5,  0.5,       0.0,  0.0,        1.0,  0.0,  0.0,
-     0.5,  0.5,  0.5,       1.0,  0.0,        1.0,  0.0,  0.0,
+    0.5,  0.5,  0.5,       1.0,  0.0,        1.0,  0.0,  0.0,
+    0.5,  0.5, -0.5,       1.0,  1.0,        1.0,  0.0,  0.0,
+    0.5, -0.5, -0.5,       0.0,  1.0,        1.0,  0.0,  0.0,
+    0.5, -0.5, -0.5,       0.0,  1.0,        1.0,  0.0,  0.0,
+    0.5, -0.5,  0.5,       0.0,  0.0,        1.0,  0.0,  0.0,
+    0.5,  0.5,  0.5,       1.0,  0.0,        1.0,  0.0,  0.0,
 
     -0.5, -0.5, -0.5,       0.0,  1.0,        0.0, -1.0,  0.0,
-     0.5, -0.5, -0.5,       1.0,  1.0,        0.0, -1.0,  0.0,
-     0.5, -0.5,  0.5,       1.0,  0.0,        0.0, -1.0,  0.0,
-     0.5, -0.5,  0.5,       1.0,  0.0,        0.0, -1.0,  0.0,
+    0.5, -0.5, -0.5,       1.0,  1.0,        0.0, -1.0,  0.0,
+    0.5, -0.5,  0.5,       1.0,  0.0,        0.0, -1.0,  0.0,
+    0.5, -0.5,  0.5,       1.0,  0.0,        0.0, -1.0,  0.0,
     -0.5, -0.5,  0.5,       0.0,  0.0,        0.0, -1.0,  0.0,
     -0.5, -0.5, -0.5,       0.0,  1.0,        0.0, -1.0,  0.0,
 
     -0.5,  0.5, -0.5,       0.0,  1.0,        0.0,  1.0,  0.0,
-     0.5,  0.5, -0.5,       1.0,  1.0,        0.0,  1.0,  0.0,
-     0.5,  0.5,  0.5,       1.0,  0.0,        0.0,  1.0,  0.0,
-     0.5,  0.5,  0.5,       1.0,  0.0,        0.0,  1.0,  0.0,
+    0.5,  0.5, -0.5,       1.0,  1.0,        0.0,  1.0,  0.0,
+    0.5,  0.5,  0.5,       1.0,  0.0,        0.0,  1.0,  0.0,
+    0.5,  0.5,  0.5,       1.0,  0.0,        0.0,  1.0,  0.0,
     -0.5,  0.5,  0.5,       0.0,  0.0,        0.0,  1.0,  0.0,
     -0.5,  0.5, -0.5,       0.0,  1.0,        0.0,  1.0,  0.0
 ];
 
-enum Dimension {
-    Dimension2D,
-    Dimension3D,
+pub struct Model {
+    pub mesh: Mesh,
+    pub draw_config: DrawConfig,
+
+    pub position: Vec3,
+    pub rotation: Vec3,
 }
 
+impl Model {
+    pub fn new(mesh: Mesh, draw_config: DrawConfig) -> Self {
+        Self {
+            mesh,
+            draw_config,
+            position: Vec3::new(0.0, 0.0, 0.0),
+            rotation: Vec3::new(0.0, 0.0, 0.0),
+        }
+    }
 
-pub struct Format {
-    indexed: bool,
-    dimension: Dimension,
+    pub fn enable(&self, gl: &GL) {
+        gl.bind_vertex_array(Some(&self.mesh.id));
+    }
+
+    pub fn draw(&self, gl: &GL) {
+        let config = &self.draw_config;
+        let stop   = self.mesh.count + (self.draw_config.stop + 1);
+        assert!(stop <= self.mesh.count, "Stop must be negative but with smaller cardinality than count.");
+
+        if self.mesh.is_indexed {
+            gl.draw_elements_with_i32(config.draw_mode, stop, GL::UNSIGNED_SHORT, 0);
+        } else {
+            gl.draw_arrays(config.draw_mode, config.start, stop);
+        }
+    }
 }
 
 
@@ -96,32 +124,13 @@ pub struct Mesh {
     pub id: WebGlVertexArrayObject,
     pub count: i32,
     pub is_indexed: bool,
+    pub is_static: bool,
 }
 
 impl Mesh {
     const DIMENSIONS: usize = 3;
 
-    pub fn enable(&self, gl: &GL) {
-        gl.bind_vertex_array(Some(&self.id));
-    }
-
-    pub fn draw(&self, gl: &GL) {
-        if self.is_indexed {
-            gl.draw_elements_with_i32(GL::TRIANGLES, self.count, GL::UNSIGNED_SHORT, 0);
-        } else {
-            gl.draw_arrays(GL::TRIANGLES, 0, self.count);
-        }
-    }
-
-    pub fn draw_with(&self, gl: &GL, mode: u32) {
-        if self.is_indexed {
-            gl.draw_elements_with_i32(mode, self.count, GL::UNSIGNED_SHORT, 0);
-        } else {
-            gl.draw_arrays(mode, 0, self.count);
-        }
-    }
-
-    pub fn from_f32_array_3d(gl: &GL, vertices: &[f32], has_texture_coordinates: bool, has_normals: bool) -> Result<Self, String> {
+    pub fn from_f32_array_3d(gl: &GL, vertices: &[f32], has_texture_coordinates: bool, has_normals: bool, _is_static: bool) -> Result<Self, String> {
         assert_eq!(vertices.len() % 3, 0);
         assert_ne!(has_texture_coordinates as i32 - has_normals as i32, -1);
 
@@ -163,7 +172,12 @@ impl Mesh {
             }
         }
 
-        Ok(Self { id: vao, count: (vertices.len() / component_count) as i32, is_indexed: false})
+        Ok(Self {
+            id: vao,
+            count: (vertices.len() / component_count) as i32,
+            is_indexed: false,
+            is_static: true,
+        })
     }
 
     pub fn from_f32_array_with_indices_3d(gl: &GL, vertices: &[f32], indices: &[u16]) -> Result<Self, String> {
@@ -208,6 +222,13 @@ impl Mesh {
 
         gl.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
 
-        Ok(Self { id: vao, count: indices.len() as i32, is_indexed: true})
+        Ok(Self {
+            id: vao,
+            count: indices.len() as i32,
+            is_indexed: true,
+            is_static: true,
+        })
     }
 }
+
+

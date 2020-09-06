@@ -1,6 +1,3 @@
-pub mod vertex;
-pub mod fragment;
-
 use web_sys::{WebGl2RenderingContext, WebGlShader};
 
 type GL = WebGl2RenderingContext;

@@ -12,26 +12,31 @@ extern crate nalgebra_glm as glm;
 
 #[macro_use]
 mod macros;
-mod model;
 mod app;
 mod camera;
 mod mesh;
 mod math;
 mod shaders;
-mod program;
+mod programs;
 mod gl_setup;
+mod materials;
+mod renderer;
+mod utils;
 
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
 use web_sys::WebGl2RenderingContext as GL;
-
-use app::{AppState, attach_mouse_down_callback, attach_mouse_up_callback, attach_mouse_move_callback, update_canvas_and_time, attach_key_up_callback, attach_key_down_callback};
-use app::*;
-use model::Model;
-use camera::Camera;
 use nalgebra::{Matrix4, Vector3};
 use js_sys::Math::abs;
+
+use crate::app::{AppState, attach_mouse_down_callback, attach_mouse_up_callback, attach_mouse_move_callback, update_canvas_and_time, attach_key_up_callback, attach_key_down_callback};
+use crate::app::*;
+use crate::camera::Camera;
+use crate::mesh::{Model, Mesh, VERTICES_TEXTURE_AND_NORMAL_3D_CUBE};
+use crate::renderer::Renderer;
+use crate::utils::create_grid;
+use crate::materials::{SingleColorMaterial, DrawConfig};
 
 
 #[wasm_bindgen]
@@ -45,9 +50,7 @@ extern "C" {
 pub struct Client {
     gl: GL,
     canvas: web_sys::HtmlCanvasElement,
-    default: program::Default,
-    grid: program::Grid,
-    models: [Model; 1],
+    models: [Model; 2],
     time: f32,
     camera: Camera,
 }
@@ -61,8 +64,6 @@ impl Client {
     pub fn new() -> Self {
         console_error_panic_hook::set_once();
         let (gl, canvas) = gl_setup::initialize_webgl_context().unwrap();
-        let default = program::Default::new(&gl).unwrap();
-        let grid = program::Grid::new(&gl).unwrap();
 
         attach_mouse_down_callback(&canvas).unwrap();
         attach_mouse_up_callback(&canvas).unwrap();
@@ -70,15 +71,24 @@ impl Client {
         attach_key_up_callback(&canvas).unwrap();
         attach_key_down_callback(&canvas).unwrap();
 
-        let models = [Model::new(&gl).unwrap()];
+        let (vertices, indices) = create_grid(20, 20);
+
+        let models = [
+            Model::new(
+                Mesh::from_f32_array_3d(&gl, &VERTICES_TEXTURE_AND_NORMAL_3D_CUBE, true, true, true).unwrap(),
+                DrawConfig::default(&gl),
+            ),
+            Model::new(
+                Mesh::from_f32_array_with_indices_3d(&gl, &vertices, &indices).unwrap(),
+                DrawConfig::new(GL::LINES, 0, -1, Box::new(SingleColorMaterial::new(&gl).unwrap()))
+            )
+        ];
         let time   = 0.0;
         let camera = Camera::new();
 
         Client {
             gl,
             canvas,
-            default,
-            grid,
             models,
             time,
             camera,
@@ -121,8 +131,8 @@ impl Client {
         if current_state.mouse_down {
             self.models[0].rotation.y -= (current_state.delta_mouse_x / current_state.canvas_width)  * std::f32::consts::PI * (dt/100.0);
             self.models[0].rotation.x -= (current_state.delta_mouse_y / current_state.canvas_height) * std::f32::consts::PI * (dt/100.0);
-            // self.models[0].position.x = (2.0 * current_state.mouse_x - current_state.canvas_width)  / current_state.canvas_width;
-            // self.models[0].position.y = (2.0 * current_state.mouse_y - current_state.canvas_height) / current_state.canvas_height;
+            self.models[0].position.x = (2.0 * current_state.mouse_x - current_state.canvas_width)  / current_state.canvas_width;
+            self.models[0].position.y = (2.0 * current_state.mouse_y - current_state.canvas_height) / current_state.canvas_height;
         } else {
             let offset_from_center_x = (current_state.mouse_x - current_state.canvas_width  / 2.0) / current_state.canvas_width;
             let offset_from_center_y = (current_state.mouse_y - current_state.canvas_height / 2.0) / current_state.canvas_height;
@@ -175,8 +185,10 @@ impl Client {
         self.gl.clear_color(0.1, 0.1, 0.1, 0.1);
         self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
-        self.default.render(&self.gl, &self.models, &self.camera).unwrap();
-        self.grid.render(&self.gl, &self.camera).unwrap();
+        Renderer::draw(&self.gl, &self.models, &self.camera).unwrap();
+
+        // self.default.render(&self.gl, &self.models, &self.camera).unwrap();
+        // self.grid.render(&self.gl, &self.camera).unwrap();
 
         let error = self.gl.get_error();
         if error != GL::NO_ERROR {

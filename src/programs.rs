@@ -1,8 +1,3 @@
-mod grid;
-mod default;
-pub use default::*;
-pub use grid::*;
-
 use web_sys::{WebGlProgram, WebGl2RenderingContext, WebGlShader};
 
 type GL = WebGl2RenderingContext;
