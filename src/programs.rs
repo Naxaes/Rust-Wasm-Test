@@ -4,6 +4,16 @@ type GL = WebGl2RenderingContext;
 type Shader = WebGlShader;
 type Program = WebGlProgram;
 
+use crate::shaders::compile;
+
+pub fn create_program(gl: &GL, vertex_source: &str, fragment_source: &str) -> Result<Program, String> {
+    link(
+        gl,
+        &compile(gl, GL::VERTEX_SHADER, vertex_source)?,
+        &compile(gl, GL::FRAGMENT_SHADER, fragment_source)?,
+    )
+}
+
 
 pub fn link(context: &GL, vertex_shader: &Shader, fragment_shader: &Shader) -> Result<Program, String> {
     let program = context

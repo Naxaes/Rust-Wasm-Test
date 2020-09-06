@@ -22,6 +22,7 @@ mod gl_setup;
 mod materials;
 mod renderer;
 mod utils;
+mod textures;
 
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
@@ -36,7 +37,7 @@ use crate::camera::Camera;
 use crate::mesh::{Model, Mesh, VERTICES_TEXTURE_AND_NORMAL_3D_CUBE};
 use crate::renderer::Renderer;
 use crate::utils::create_grid;
-use crate::materials::{SingleColorMaterial, DrawConfig};
+use crate::materials::{SingleColorMaterial, DefaultMaterial, DrawConfig};
 
 
 #[wasm_bindgen]
@@ -76,7 +77,8 @@ impl Client {
         let models = [
             Model::new(
                 Mesh::from_f32_array_3d(&gl, &VERTICES_TEXTURE_AND_NORMAL_3D_CUBE, true, true, true).unwrap(),
-                DrawConfig::default(&gl),
+                // DrawConfig::default(&gl),
+                DrawConfig::new(GL::TRIANGLES, 0, -1, Box::new(DefaultMaterial::new(&gl).unwrap()))
             ),
             Model::new(
                 Mesh::from_f32_array_with_indices_3d(&gl, &vertices, &indices).unwrap(),
