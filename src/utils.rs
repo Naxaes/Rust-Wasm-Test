@@ -51,3 +51,39 @@ pub fn create_grid(width: usize, depth: usize) -> (Vec<f32>, Vec<u16>) {
 
     // let grid = Mesh::from_f32_array_with_indices_3d(gl, &vertices, &indices).unwrap();
 }
+
+
+use wasm_bindgen::JsCast;
+macro_rules! array_to_wasm_array {
+    ($T:ident, $JSArray:ident, $array:ident) => {
+        {
+            let memory = wasm_bindgen::memory()
+                .dyn_into::<WebAssembly::Memory>()
+                .unwrap()
+                .buffer();
+            let location: u32 = ($array.as_ptr() as u32) / (std::mem::size_of::<$T>() as u32);  // TODO(ted): How does this work?
+
+            $JSArray::new(&memory).subarray(
+                location,
+                location + $array.len() as u32,
+            )
+        }
+    };
+}
+
+
+//
+// /// The T type and JSArray type must match in size. I.e. ([f32] and Float32Array) or ([u16] and Uint16Array).
+// pub fn array_to_wasm_array<T, JSArray>(array: &[T]) -> JSArray {
+//     let memory = wasm_bindgen::memory()
+//         .dyn_into::<WebAssembly::Memory>()
+//         .unwrap()
+//         .buffer();
+//     let location: u32 = (array.as_ptr() as u32) / (std::mem::size_of::<T>() as u32);  // TODO(ted): How does this work?
+//     let js_array = JSArray::new(&memory).subarray(
+//         location,
+//         location + array.len() as u32,
+//     );
+//
+//     js_array
+// }

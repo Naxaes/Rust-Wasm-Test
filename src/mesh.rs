@@ -1,12 +1,11 @@
 use wasm_bindgen::JsCast;
 use web_sys::*;
 use web_sys::WebGl2RenderingContext as GL;
-use js_sys::WebAssembly;
-use glm::{Mat4, Vec3, value_ptr};
+use js_sys::{WebAssembly, Float32Array, Uint16Array};
+use glm::{Mat4, Vec2, Vec3, value_ptr};
 
 use crate::materials::{Material, DrawConfig};
 use crate::camera::Camera;
-
 
 
 pub const VERTICES_2D_RECTANGLE: [f32; 12] = [
@@ -92,6 +91,10 @@ pub struct Model {
     pub rotation: Vec3,
 }
 
+
+// An orientation is a state: “the object’s orientation is…”
+// A rotation is an operation: “Apply this rotation to the object”
+
 impl Model {
     pub fn new(mesh: Mesh, draw_config: DrawConfig) -> Self {
         Self {
@@ -134,15 +137,7 @@ impl Mesh {
         assert_eq!(vertices.len() % 3, 0);
         assert_ne!(has_texture_coordinates as i32 - has_normals as i32, -1);
 
-        let vertex_memory = wasm_bindgen::memory()
-            .dyn_into::<WebAssembly::Memory>()
-            .unwrap()
-            .buffer();
-        let vertices_location: u32 = vertices.as_ptr() as u32 / 4;  // TODO(ted): How does this work?
-        let vertices_array = js_sys::Float32Array::new(&vertex_memory).subarray(
-            vertices_location,
-            vertices_location + vertices.len() as u32,
-        );
+        let vertices_array = array_to_wasm_array!(f32, Float32Array, vertices);
 
         // Create vertex array buffer to store vertex buffers and element buffers.
         let vao = gl.create_vertex_array().ok_or("[WEBGL2 - VAO ERROR]: Unable to create VAO.")?;
@@ -181,27 +176,8 @@ impl Mesh {
     }
 
     pub fn from_f32_array_with_indices_3d(gl: &GL, vertices: &[f32], indices: &[u16]) -> Result<Self, String> {
-        let vertex_memory = wasm_bindgen::memory()
-            .dyn_into::<WebAssembly::Memory>()
-            .unwrap()
-            .buffer();
-        let vertices_location: u32 = vertices.as_ptr() as u32 / 4;  // TODO(ted): How does this work?
-        let vertices_array = js_sys::Float32Array::new(&vertex_memory).subarray(
-            vertices_location,
-            vertices_location + vertices.len() as u32,
-        );
-
-        let index_memory = wasm_bindgen::memory()
-            .dyn_into::<WebAssembly::Memory>()
-            .unwrap()
-            .buffer();
-
-        let indices_location: u32 = indices.as_ptr() as u32 / 2;  // TODO(ted): How does this work?
-        let indices_array = js_sys::Uint16Array::new(&index_memory).subarray(
-            indices_location,
-            indices_location + indices.len() as u32,
-        );
-
+        let vertices_array = array_to_wasm_array!(f32, Float32Array, vertices);
+        let indices_array  = array_to_wasm_array!(u16, Uint16Array, indices);
 
         // Create vertex array buffer to store vertex buffers and element buffers.
         let vao = gl.create_vertex_array().ok_or("[WEBGL2 - VAO ERROR]: Unable to create VAO.")?;

@@ -19,7 +19,7 @@ rust.then(m => {
         if (currentTime >= lastRenderTime + updateTime) {
             let elapsedTime = currentTime - lastRenderTime;
             lastRenderTime = currentTime;
-            client.update(elapsedTime, window.innerHeight, window.innerWidth);
+            client.update(elapsedTime, window.innerWidth, window.innerHeight);
             client.render();
         }
     }
